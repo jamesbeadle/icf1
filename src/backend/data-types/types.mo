@@ -22,6 +22,25 @@ module Types {
         raceId: RaceId;
         year: Nat16;
         points: Nat16;
+        teamSelections: [TeamSelection];
+    };
+
+    public type TeamSelection = {
+        f1TeamId: F1TeamId;
+        fastestTeamSelectionIndex: Nat8;
+        leadDriver: F1DriverId;
+        secondDriver: F1DriverId;
+        leadDriverBonuses: [BonusType];
+        secondDriverBonuses: [BonusType];
+    };
+
+    public type BonusType = {
+        #OnPole;
+        #FastestLap;
+        #WinsRace;
+        #FirstOut;
+        #Lapped;
+        #DidNotFinish;
     };
 
     public type F1Driver = {

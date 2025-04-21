@@ -19,7 +19,6 @@ import Ids "mo:waterway-mops/Ids";
 import Environment "../environment";
 import RaceTrackQueries "../queries/race_track_queries";
 
-
 module {
   public class UserManager() {
 
@@ -210,6 +209,9 @@ module {
     };
 
     public func submitPrediction(principalId: Ids.PrincipalId, username: Text, dto: UserCommands.SubmitPrediction) : Result.Result<(), Enums.Error> {
+      
+      // TODO check that all 10 teams are here
+      
       let existingPrediction = Array.find(predictions, func(entry: Types.Prediction) : Bool {
         entry.principalId == principalId
       });
@@ -225,6 +227,7 @@ module {
                 raceId = foundPrediction.raceId;
                 username = foundPrediction.username;
                 year = foundPrediction.year;
+                teamSelections = foundPrediction.teamSelections;
               }
             };
             return entry;
@@ -238,6 +241,7 @@ module {
             raceId = dto.raceId;
             username = username;
             year = dto.year;
+            teamSelections = dto.teamSelections;
           };
           
           let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
@@ -249,14 +253,33 @@ module {
       return #ok();
     };
 
-    public func calculateF1PredictionPoints(leaderboard: Types.RaceLeaderboard, raceTrack: RaceTrackQueries.RaceTrack) {
+    public func calculateF1PredictionPoints(leaderboard: Types.RaceLeaderboard) {
     
       let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
     
       for (i in Iter.range(0, predictions.size() - 1)) {
         let prediction = predictions[i];
 
-        var points: Nat16 = 0; // TODO
+        
+
+        for(team in Iter.fromArray(leaderboard.teams)){
+          
+        };
+
+        //check the race results
+
+        //for each team compare the lead and second driver predictions
+        //check the team order scores
+        //check the bonuses played to see who got them
+
+        let teamDriverOrderScores: Nat16 = 0;
+        let teamBestDriverOrderScores: Nat16 = 0;
+        let driverBonusesPlayedScores: Nat16 = 0;
+
+        var points: Nat16 = teamDriverOrderScores + teamBestDriverOrderScores + driverBonusesPlayedScores; // TODO
+
+        
+
         
         let updatedPrediction : Types.Prediction = {
             createdOn = prediction.createdOn;
@@ -265,6 +288,7 @@ module {
             username = prediction.username;
             year = prediction.year;
             points = points;
+            teamSelections = prediction.teamSelections;
         };
         
         predictionBuffer.put(i, updatedPrediction);
