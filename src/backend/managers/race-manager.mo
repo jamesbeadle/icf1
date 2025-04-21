@@ -13,18 +13,18 @@ import Environment "../environment";
 
 
 module {
-  public class TournamentManager() {
+  public class RaceManager() {
 
-    private var tournaments: [Types.Tournament] = [];
+    private var races: [Types.Race] = [];
 
-    public func getTournament(dto: RaceQueries.GetRace) : Result.Result<RaceQueries.Race, Enums.Error> {
-      let tournament = Array.find(tournaments, func(entry: Types.Tournament) : Bool {
+    public func getRace(dto: RaceQueries.GetRace) : Result.Result<RaceQueries.Race, Enums.Error> {
+      let race = Array.find(races, func(entry: Types.Race) : Bool {
         entry.id == dto.raceId
       });
-      switch(tournament){
-        case (?foundTournament){
+      switch(race){
+        case (?foundRace){
           return #ok({
-            raceId = foundTournament.id;
+            raceId = foundRace.id;
           });
         };
         case (null){
@@ -33,14 +33,14 @@ module {
       }
     };
 
-    public func getTournamentInstance(dto: TournamentQueries.GetTournamentInstance) : Result.Result<TournamentQueries.TournamentInstance, Enums.Error> {
-      let tournament = Array.find(tournaments, func(entry: Types.Tournament) : Bool {
+    public func getRaceInstance(dto: RaceQueries.GetRaceInstance) : Result.Result<RaceQueries.RaceInstance, Enums.Error> {
+      let race = Array.find(races, func(entry: Types.Race) : Bool {
         entry.id == dto.raceId
       });
-      switch(tournament){
-        case (?foundTournament){
+      switch(race){
+        case (?foundRace){
           
-          let instance = Array.find<Types.TournamentInstance>(foundTournament.instances, func(entry: Types.TournamentInstance) : Bool {
+          let instance = Array.find<Types.RaceInstance>(foundRace.instances, func(entry: Types.RaceInstance) : Bool {
             return entry.year == dto.year;
           });
           switch(instance){
@@ -68,13 +68,13 @@ module {
       }
     };
     
-    public func listTournaments(dto: TournamentQueries.ListTournaments) : Result.Result<TournamentQueries.Tournaments, Enums.Error> {
+    public func listRaces(dto: RaceQueries.ListRaces) : Result.Result<RaceQueries.Races, Enums.Error> {
       
-      let allEntries = List.fromArray(tournaments);
+      let allEntries = List.fromArray(races);
       let startIndex = dto.page * Environment.PAGINATION_ROW_COUNT;
-      let droppedEntries = List.drop<Types.Tournament>(allEntries, startIndex);
-      let paginatedEntires = List.take<Types.Tournament>(droppedEntries, Environment.PAGINATION_ROW_COUNT);
-      let mappedEntries = List.map<Types.Tournament, TournamentQueries.TournamentSummary>(paginatedEntires, func(entry: Types.Tournament){
+      let droppedEntries = List.drop<Types.Race>(allEntries, startIndex);
+      let paginatedEntires = List.take<Types.Race>(droppedEntries, Environment.PAGINATION_ROW_COUNT);
+      let mappedEntries = List.map<Types.Race, RaceQueries.RaceSummary>(paginatedEntires, func(entry: Types.Race){
         return {
           name = entry.name;
           raceId = entry.id;
@@ -82,15 +82,15 @@ module {
       });
 
       return #ok({
-        entries = List.toArray<TournamentQueries.TournamentSummary>(mappedEntries);
+        entries = List.toArray<RaceQueries.RaceSummary>(mappedEntries);
         page = dto.page;
         totalEntries = List.size(allEntries);
       });
     };
 
-    public func createTournament(dto: TournamentCommands.CreateTournament) : Result.Result<(), Enums.Error> {
+    public func createRace(dto: RaceCommands.CreateRace) : Result.Result<(), Enums.Error> {
 
-      let sortedTournaments = Array.sort(tournaments, func(a: Types.Tournament, b: Types.Tournament) : Order.Order {
+      let sortedRacess = Array.sort(races, func(a: Types.Race, b: Types.Race) : Order.Order {
         if (a.id > b.id) { #less } 
         else if (a.id < b.id) { #greater }
         else { #equal }
@@ -98,12 +98,12 @@ module {
 
       var nextId: Nat16 = 1;
 
-      if(Array.size(sortedTournaments) > 0){
-        nextId := sortedTournaments[0].id + 1;
+      if(Array.size(sortedRaces) > 0){
+        nextId := sortedRaces[0].id + 1;
       };
 
-      let tournamentBuffer = Buffer.fromArray<Types.Tournament>(tournaments);
-      tournamentBuffer.add({
+      let racesBuffer = Buffer.fromArray<Types.Race>(races);
+      racesBuffer.add({
         id = nextId;
         name = dto.name;
         instances = [];
@@ -112,15 +112,15 @@ module {
       return #ok();
     };
 
-    public func createTournamentInstance(dto: TournamentCommands.CreateTournamentInstance) : Result.Result<(), Enums.Error> {
+    public func createRaceInstance(dto: RaceCommands.CreateRaceInstance) : Result.Result<(), Enums.Error> {
       
-      let tournament = Array.find(tournaments, func(entry: Types.Tournament) : Bool {
+      let race = Array.find(races, func(entry: Types.Race) : Bool {
         entry.id == dto.raceId
       });
-      switch(tournament){
-        case (?foundTournament){
+      switch(race){
+        case (?foundRace){
           
-          let existingInstance = Array.find<Types.TournamentInstance>(foundTournament.instances, func(entry: Types.TournamentInstance) : Bool {
+          let existingInstance = Array.find<Types.RaceInstance>(foundRace.instances, func(entry: Types.RaceInstance) : Bool {
             entry.year == dto.year;
           });
 
@@ -129,7 +129,7 @@ module {
               return #err(#AlreadyExists);
             };
             case (null){
-              let instancesBuffer = Buffer.fromArray<Types.TournamentInstance>(foundTournament.instances);
+              let instancesBuffer = Buffer.fromArray<Types.RaceInstance>(foundRace.instances);
               instancesBuffer.add({
                 raceTrackId = dto.raceTrackId;
                 startDate = dto.startDate;
@@ -142,7 +142,7 @@ module {
                 stage = #NotStarted;
                 year = dto.year;
               });
-              //set the tournament instance
+              //set the race instance
 
               return #ok();
             }
@@ -154,19 +154,19 @@ module {
       };
     };
 
-    public func updateTournamentStage(dto: TournamentCommands.UpdateTournamentStage) : Result.Result<(), Enums.Error> {
-      let tournament = Array.find(tournaments, func(entry: Types.Tournament) : Bool {
+    public func updateRaceStage(dto: RaceCommands.UpdateRaceStage) : Result.Result<(), Enums.Error> {
+      let race = Array.find(races, func(entry: Types.Race) : Bool {
         entry.id == dto.raceId
       });
-      switch(tournament){
+      switch(race){
         case (?_){
           
-          tournaments := Array.map<Types.Tournament, Types.Tournament>(tournaments, func(entry: Types.Tournament){
+          races := Array.map<Types.Race, Types.Race>(races, func(entry: Types.Race){
             if(entry.id == dto.raceId){
               return {
                 id = entry.id;
                 name = entry.name;
-                instances = Array.map<Types.TournamentInstance, Types.TournamentInstance>(entry.instances, func(instanceEntry: Types.TournamentInstance){
+                instances = Array.map<Types.RaceInstance, Types.RaceInstance>(entry.instances, func(instanceEntry: Types.RaceInstance){
                   if(instanceEntry.year == dto.year){
                   
                     return {
@@ -196,18 +196,18 @@ module {
     };
 
     public func setPopulated(raceId: Types.RaceId, year: Nat16) {
-      let tournament = Array.find(tournaments, func(entry: Types.Tournament) : Bool {
+      let race = Array.find(races, func(entry: Types.Race) : Bool {
         entry.id == raceId
       });
-      switch(tournament){
+      switch(race){
         case (?_){
           
-          tournaments := Array.map<Types.Tournament, Types.Tournament>(tournaments, func(entry: Types.Tournament){
+          races := Array.map<Types.Race, Types.Race>(races, func(entry: Types.Race){
             if(entry.id == raceId){
               return {
                 id = entry.id;
                 name = entry.name;
-                instances = Array.map<Types.TournamentInstance, Types.TournamentInstance>(entry.instances, func(instanceEntry: Types.TournamentInstance){
+                instances = Array.map<Types.RaceInstance, Types.RaceInstance>(entry.instances, func(instanceEntry: Types.RaceInstance){
                   if(instanceEntry.year == year){
                   
                     return {
@@ -233,12 +233,12 @@ module {
       }
     };
 
-    public func getStableTournaments() : [Types.Tournament] {
-      return tournaments;
+    public func getStableRaces() : [Types.Race] {
+      return races;
     };
 
-    public func setStableTournaments(stable_tournaments : [Types.Tournament]) {
-      tournaments := stable_tournaments;
+    public func setStableRaces(stable_races : [Types.Race]) {
+      races := stable_races;
     };
 
   };

@@ -5,6 +5,7 @@ module Types {
     public type F1DriverId = Nat16;
     public type F1TeamId = Nat16;
     public type RaceId = Nat16;
+    public type RaceTrackId = Nat16;
     public type PredictionId = Nat16;
 
     public type Profile = {
@@ -20,8 +21,6 @@ module Types {
         username: Text;
         raceId: RaceId;
         year: Nat16;
-
-        
     };
 
     public type F1Driver = {
@@ -47,12 +46,17 @@ module Types {
 
     public type RaceInstance = {
         raceId: RaceId;
+        raceTrackId: RaceTrackId;
         year: Nat16;
         startDate: Int;
         endDate: Int;
         leaderboard: RaceLeaderboard;
         stage: RaceStage;
         populated: Bool;
+    };
+
+    public type RaceTrack = {
+
     };
 
     public type RaceLeaderboard = {

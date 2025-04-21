@@ -215,16 +215,23 @@ actor Self {
     return fantasyLeaderboardManager.getLeaderboard(dto);
   };
 
-  /* ----- Tournament Queries and Commands ----- */
+  /* ----- Race Queries and Commands ----- */
 
-  public shared query ({ caller }) func getTournament(dto : TournamentQueries.GetTournament) : async Result.Result<TournamentQueries.Tournament, Enums.Error> {
+  public shared query ({ caller }) func getRace(dto: RaceQueries.GetRace) : async Result.Result<RaceQueries.Race, Enums.Error> {
     assert not Principal.isAnonymous(caller);
-    return tournamentManager.getTournament(dto);
+    return raceManager.getRace(dto);
   };
 
-  public shared query ({ caller }) func listTournaments(dto : TournamentQueries.ListTournaments) : async Result.Result<TournamentQueries.Tournaments, Enums.Error> {
+  public shared query ({ caller }) func listRaces(dto: RaceQueries.ListRaces) : async Result.Result<RaceQueries.Races, Enums.Error> {
     assert not Principal.isAnonymous(caller);
-    return tournamentManager.listTournaments(dto);
+    return raceManager.listRaces(dto);
+  };
+
+  public shared ({ caller }) func createRace(dto: RaceCommands.CreateRace) : async Result.Result<(), Enums.Error> {
+    assert not Principal.isAnonymous(caller);
+    let principalId = Principal.toText(caller);
+    assert await isAdmin(principalId);
+    return raceManager.createRace(dto);  
   };
 
   public shared ({ caller }) func createTournament(dto : TournamentCommands.CreateTournament) : async Result.Result<(), Enums.Error> {
@@ -246,6 +253,26 @@ actor Self {
     let principalId = Principal.toText(caller);
     assert await isAdmin(principalId);
     return fantasyLeaderboardManager.calculateLeaderboard(dto.raceId, dto.year);
+  };
+
+
+  /* ----- Race Track Queries and Commands ----- */
+
+  public shared query ({ caller }) func getRaceTrack(dto: RaceTrackQueries.GetRaceTrack) : async Result.Result<RaceQueries.RaceTrack, Enums.Error> {
+    assert not Principal.isAnonymous(caller);
+    return raceTrackManager.getRaceTrack(dto);
+  };
+  
+  public shared query ({ caller }) func listRaceTracks(dto: RaceQueries.ListRaces) : async Result.Result<RaceQueries.Races, Enums.Error> {
+    assert not Principal.isAnonymous(caller);
+    return raceManager.listRaces(dto);
+  };
+
+  public shared ({ caller }) func createRaceTrack(dto: RaceTrackCommands.CreateRaceTrack) : async Result.Result<(), Enums.Error> {
+    assert not Principal.isAnonymous(caller);
+    let principalId = Principal.toText(caller);
+    assert await isAdmin(principalId);
+    return raceTrackManager.createRaceTrack(dto);  
   };
 
   /* ----- Private Functions ----- */
