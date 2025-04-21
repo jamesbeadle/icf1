@@ -36,7 +36,7 @@ module UserQueries {
         principalId: Ids.PrincipalId;
         raceId: Types.RaceId;
         year: Nat16;
-        points: Int8;
+        points: Nat16;
         createdOn: Int;
     };
 

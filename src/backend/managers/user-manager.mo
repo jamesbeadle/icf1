@@ -17,6 +17,7 @@ import Char "mo:base/Char";
 import Enums "mo:waterway-mops/Enums";
 import Ids "mo:waterway-mops/Ids";
 import Environment "../environment";
+import RaceTrackQueries "../queries/race_track_queries";
 
 
 module {
@@ -87,6 +88,7 @@ module {
           return #err(#NotFound);
         };
         case (null){ 
+          return #err(#NotFound);
         }
       };
     };
@@ -219,7 +221,7 @@ module {
               return {
                 createdOn = foundPrediction.createdOn;
                 principalId = foundPrediction.principalId;
-                totalPoints = foundPrediction.totalPoints;
+                points = foundPrediction.points;
                 raceId = foundPrediction.raceId;
                 username = foundPrediction.username;
                 year = foundPrediction.year;
@@ -236,9 +238,6 @@ module {
             raceId = dto.raceId;
             username = username;
             year = dto.year;
-            swap1Used = false;
-            swap2Used = false;
-            swap3Used = false;
           };
           
           let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
@@ -256,6 +255,8 @@ module {
     
       for (i in Iter.range(0, predictions.size() - 1)) {
         let prediction = predictions[i];
+
+        var points: Nat16 = 0; // TODO
         
         let updatedPrediction : Types.Prediction = {
             createdOn = prediction.createdOn;

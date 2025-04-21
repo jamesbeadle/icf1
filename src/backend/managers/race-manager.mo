@@ -90,7 +90,7 @@ module {
 
     public func createRace(dto: RaceCommands.CreateRace) : Result.Result<(), Enums.Error> {
 
-      let sortedRacess = Array.sort(races, func(a: Types.Race, b: Types.Race) : Order.Order {
+      let sortedRaces = Array.sort(races, func(a: Types.Race, b: Types.Race) : Order.Order {
         if (a.id > b.id) { #less } 
         else if (a.id < b.id) { #greater }
         else { #equal }
@@ -131,6 +131,7 @@ module {
             case (null){
               let instancesBuffer = Buffer.fromArray<Types.RaceInstance>(foundRace.instances);
               instancesBuffer.add({
+                raceId = dto.raceId;
                 raceTrackId = dto.raceTrackId;
                 startDate = dto.startDate;
                 endDate = dto.endDate;
@@ -170,6 +171,7 @@ module {
                   if(instanceEntry.year == dto.year){
                   
                     return {
+                      raceId = instanceEntry.raceId;
                       raceTrackId = instanceEntry.raceTrackId;
                       endDate = instanceEntry.endDate;
                       leaderboard = instanceEntry.leaderboard;
@@ -211,6 +213,7 @@ module {
                   if(instanceEntry.year == year){
                   
                     return {
+                      raceId = instanceEntry.raceId;
                       raceTrackId = instanceEntry.raceTrackId;
                       endDate = instanceEntry.endDate;
                       leaderboard = instanceEntry.leaderboard;

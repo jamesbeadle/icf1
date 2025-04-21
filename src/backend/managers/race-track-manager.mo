@@ -6,8 +6,6 @@ import Array "mo:base/Array";
 import List "mo:base/List";
 import Buffer "mo:base/Buffer";
 import Order "mo:base/Order";
-import Int "mo:base/Int";
-import Nat8 "mo:base/Nat8";
 import Enums "mo:waterway-mops/Enums";
 import Environment "../environment";
 
@@ -19,12 +17,14 @@ module {
 
     public func getRaceTrack(dto: RaceTrackQueries.GetRaceTrack) : Result.Result<RaceTrackQueries.RaceTrack, Enums.Error> {
       let raceTrack = Array.find(raceTracks, func(entry: Types.RaceTrack) : Bool {
-        entry.id == dto.raceId
+        entry.id == dto.raceTrackId
       });
       switch(raceTrack){
         case (?foundRaceTrack){
           return #ok({
             raceTrackId = foundRaceTrack.id;
+            country = foundRaceTrack.country; 
+            name = foundRaceTrack.name;
           });
         };
         case (null){
@@ -70,7 +70,11 @@ module {
       let raceTracksBuffer = Buffer.fromArray<Types.RaceTrack>(raceTracks);
       raceTracksBuffer.add({
         id = nextId;
+        closed = null;
+        country = dto.countryId;
         name = dto.name;
+        opened = dto.opened;
+        status = #Open;
       });
 
       return #ok();

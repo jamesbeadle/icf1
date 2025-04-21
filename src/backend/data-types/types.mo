@@ -21,6 +21,7 @@ module Types {
         username: Text;
         raceId: RaceId;
         year: Nat16;
+        points: Nat16;
     };
 
     public type F1Driver = {
@@ -56,7 +57,17 @@ module Types {
     };
 
     public type RaceTrack = {
+        id: RaceTrackId;
+        name: Text;
+        country: Ids.CountryId;
+        opened: Int;
+        closed: ?Int;
+        status: RaceTrackStatus;
+    };
 
+    public type RaceTrackStatus = {
+        #Open;
+        #Closed;
     };
 
     public type RaceLeaderboard = {
@@ -65,9 +76,14 @@ module Types {
     };
 
     public type RaceLeaderboardEntry = {
-        f1DriverId: F1DriverId;
-        raceId: RaceId;
+        f1DriverId: Types.F1DriverId;
+        raceId: Types.RaceId;
+        laps: [F1RaceLap];
         raceTime: Nat;
+    };
+
+    public type F1RaceLap = {
+
     };
 
     public type RaceStage = {

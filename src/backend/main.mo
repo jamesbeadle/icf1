@@ -28,13 +28,12 @@ import F1TeamCommands "commands/f1_team_commands";
 import F1DriverCommands "commands/f1_driver_commands";
 import RaceCommands "commands/race_commands";
 import FantasyLeaderboardCommands "commands/fantasy_leaderboard_commands";
-import CanisterIds "mo:waterway-mops/CanisterIds";
 
 /* ----- Manager ----- */
 
 import UserManager "managers/user-manager";
 import F1TeamManager "managers/f1-team-manager";
-import F1DriverManager "managers/f1-team-manager";
+import F1DriverManager "managers/f1-driver-manager";
 import FantasyLeaderboardManager "managers/fantasy-leaderboard-manager";
 import RaceManager "managers/race-manager";
 
@@ -45,6 +44,9 @@ import Environment "environment";
 import FantasyLeaderboardQueries "queries/fantasy_leaderboard_queries";
 import MopsBaseCommands "mops_base_commands";
 import RaceQueries "queries/race_queries";
+import RaceTrackQueries "queries/race_track_queries";
+import RaceTrackCommands "commands/race_track_commands";
+import RaceTrackManager "managers/race-track-manager";
 
 actor Self {
 
@@ -69,6 +71,7 @@ actor Self {
   private let f1DriverManager = F1DriverManager.F1DriverManager();
   private let f1TeamManager = F1TeamManager.F1TeamManager();
   private let raceManager = RaceManager.RaceManager();
+  private let raceTrackManager = RaceTrackManager.RaceTrackManager();
 
   /* ----- App Queries and Commands ----- */
 
@@ -153,6 +156,8 @@ actor Self {
     assert not Principal.isAnonymous(caller);
     let principalId = Principal.toText(caller);
 
+    //TODO
+
     return #err(#NotFound);
   };
 
@@ -234,38 +239,32 @@ actor Self {
     return raceManager.createRace(dto);  
   };
 
-  public shared ({ caller }) func createTournament(dto : TournamentCommands.CreateTournament) : async Result.Result<(), Enums.Error> {
+  public shared ({ caller }) func updateRaceStage(dto : RaceCommands.UpdateRaceStage) : async Result.Result<(), Enums.Error> {
     assert not Principal.isAnonymous(caller);
     let principalId = Principal.toText(caller);
     assert await isAdmin(principalId);
-    return tournamentManager.createTournament(dto);
-  };
-
-  public shared ({ caller }) func updateTournamentStage(dto : TournamentCommands.UpdateTournamentStage) : async Result.Result<(), Enums.Error> {
-    assert not Principal.isAnonymous(caller);
-    let principalId = Principal.toText(caller);
-    assert await isAdmin(principalId);
-    return tournamentManager.updateTournamentStage(dto);
+    return raceManager.updateRaceStage(dto);
   };
 
   public shared ({ caller }) func calculateLeaderboard(dto : FantasyLeaderboardCommands.CalculateLeaderboard) : async Result.Result<(), Enums.Error> {
     assert not Principal.isAnonymous(caller);
     let principalId = Principal.toText(caller);
     assert await isAdmin(principalId);
-    return fantasyLeaderboardManager.calculateLeaderboard(dto.raceId, dto.year);
+    fantasyLeaderboardManager.calculateLeaderboard(dto.raceId, dto.year);
+    return #ok();
   };
 
 
   /* ----- Race Track Queries and Commands ----- */
 
-  public shared query ({ caller }) func getRaceTrack(dto: RaceTrackQueries.GetRaceTrack) : async Result.Result<RaceQueries.RaceTrack, Enums.Error> {
+  public shared query ({ caller }) func getRaceTrack(dto: RaceTrackQueries.GetRaceTrack) : async Result.Result<RaceTrackQueries.RaceTrack, Enums.Error> {
     assert not Principal.isAnonymous(caller);
     return raceTrackManager.getRaceTrack(dto);
   };
   
-  public shared query ({ caller }) func listRaceTracks(dto: RaceQueries.ListRaces) : async Result.Result<RaceQueries.Races, Enums.Error> {
+  public shared query ({ caller }) func listRaceTracks(dto: RaceTrackQueries.ListRaceTracks) : async Result.Result<RaceTrackQueries.RaceTracks, Enums.Error> {
     assert not Principal.isAnonymous(caller);
-    return raceManager.listRaces(dto);
+    return raceTrackManager.listRaceTracks(dto);
   };
 
   public shared ({ caller }) func createRaceTrack(dto: RaceTrackCommands.CreateRaceTrack) : async Result.Result<(), Enums.Error> {
@@ -351,7 +350,7 @@ actor Self {
     f1DriverManager.setStableF1Drivers(stable_f1_drivers);
     f1TeamManager.setStableF1Teams(stable_f1_teams);
     fantasyLeaderboardManager.setStableLeaderboards(stable_fantasy_leaderboards);
-    raceManager.setStableF1Teams(stable_f1_teams);
+    raceManager.setStableRaces(stable_races);
   };
 
   /* ----- WWL Canister Management ----- */

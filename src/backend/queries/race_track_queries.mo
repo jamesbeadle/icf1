@@ -1,4 +1,5 @@
 import Types "../data-types/types";
+import Ids "mo:waterway-mops/Ids";
 module RaceQueries {
     
     public type GetRaceTrack = {
@@ -7,7 +8,8 @@ module RaceQueries {
 
     public type RaceTrack = {
         raceTrackId: Types.RaceTrackId;
-
+        name: Text;
+        country: Ids.CountryId;
     };
 
     public type ListRaceTracks = {

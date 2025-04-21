@@ -6,6 +6,7 @@ module RaceCommands {
 
     public type CreateRaceInstance = {
         raceId: Types.RaceId;
+        raceTrackId: Types.RaceTrackId;
         year: Nat16;
         startDate: Int;
         endDate: Int;
@@ -17,7 +18,7 @@ module RaceCommands {
         f1DriverId: Types.F1DriverId;
     };
 
-    public type UpdatRaceStage = {
+    public type UpdateRaceStage = {
         raceId: Types.RaceId;
         year: Nat16;
         stage: Types.RaceStage;
