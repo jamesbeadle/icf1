@@ -104,11 +104,11 @@ module {
 
         public func calculateLeaderboard(raceId: Types.RaceId, year: Nat16) {
 
-            let tournamentLeaderboard = Array.find<Types.FantasyLeaderboard>(leaderboards, func(entry: Types.FantasyLeaderboard) : Bool {
+            let raceLeaderboard = Array.find<Types.FantasyLeaderboard>(leaderboards, func(entry: Types.FantasyLeaderboard) : Bool {
                 entry.raceId == raceId and entry.year == year
             });
 
-            switch(tournamentLeaderboard){
+            switch(raceLeaderboard){
                 case (?foundLeaderboard){
                     
 

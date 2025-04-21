@@ -23,20 +23,24 @@ module RaceQueries {
         raceTrackId: Types.RaceTrackId;
         startDate: Int;
         endDate: Int;
-        leaderboard: TournamentLeaderboard;
-        stage: Types.TournamentStage;
+        leaderboard: RaceLeaderboard;
+        stage: Types.RaceStage;
     };
 
-    public type TournamentLeaderboard = {
+    public type RaceLeaderboard = {
         totalEntries: Nat;
-        entries: [TournamentLeaderboardEntry];
+        entries: [RaceLeaderboardEntry];
     };
 
     public type RaceLeaderboardEntry = {
-        f1DriverId: Types.DriverId;
+        f1DriverId: Types.F1DriverId;
         raceId: Types.RaceId;
-        laps: [Types.F1RaceLap];
+        laps: [F1RaceLap];
         raceTime: Nat;
+    };
+
+    public type F1RaceLap = {
+
     };
 
     public type ListRaces = {

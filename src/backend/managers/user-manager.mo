@@ -280,21 +280,21 @@ module {
     };
 
     public func getLeaderboardChunk(raceId: Types.RaceId, year: Nat16, chunkIndex: Nat) : [Types.Prediction] {
-      let tournamentPredictions = Array.filter<Types.Prediction>(predictions, func(entry: Types.Prediction) : Bool {
+      let racePredictions = Array.filter<Types.Prediction>(predictions, func(entry: Types.Prediction) : Bool {
         entry.raceId == raceId and entry.year == year
       });
       
       let startIndex = chunkIndex * Environment.ENTRY_TRANSFER_LIMIT;
-      let endIndex = Nat.min(startIndex + Environment.ENTRY_TRANSFER_LIMIT, Array.size(tournamentPredictions));
+      let endIndex = Nat.min(startIndex + Environment.ENTRY_TRANSFER_LIMIT, Array.size(racePredictions));
       
-      if (startIndex >= Array.size(tournamentPredictions)) {
+      if (startIndex >= Array.size(racePredictions)) {
         return [];
       };
       
       let chunkSizeInt = Int.sub(endIndex, startIndex);
       let chunkSize = if (chunkSizeInt >= 0) { Int.abs(chunkSizeInt) } else { 0 };
       
-      let chunk = Array.subArray(tournamentPredictions, startIndex, chunkSize);
+      let chunk = Array.subArray(racePredictions, startIndex, chunkSize);
       
       return chunk;
     };
