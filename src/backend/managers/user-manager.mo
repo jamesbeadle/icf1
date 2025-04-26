@@ -14,6 +14,7 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Text "mo:base/Text";
 import Char "mo:base/Char";
+import Nat16 "mo:base/Nat16";
 import Enums "mo:waterway-mops/Enums";
 import Ids "mo:waterway-mops/Ids";
 import Environment "../environment";
@@ -208,94 +209,226 @@ module {
       };
     };
 
-    public func submitPrediction(principalId: Ids.PrincipalId, username: Text, dto: UserCommands.SubmitPrediction) : Result.Result<(), Enums.Error> {
-      
-      // TODO check that all 10 teams are here
-      
-      let existingPrediction = Array.find(predictions, func(entry: Types.Prediction) : Bool {
-        entry.principalId == principalId
-      });
-      
-      switch(existingPrediction){
-        case (?foundPrediction){
-          predictions := Array.map<Types.Prediction, Types.Prediction>(predictions, func(entry: Types.Prediction){
-            if(entry.principalId == principalId){
-              return {
-                createdOn = foundPrediction.createdOn;
-                principalId = foundPrediction.principalId;
-                points = foundPrediction.points;
-                raceId = foundPrediction.raceId;
-                username = foundPrediction.username;
-                year = foundPrediction.year;
-                teamSelections = foundPrediction.teamSelections;
-              }
-            };
-            return entry;
-          });
-        };
-        case (null){
-          let newPrediction: Types.Prediction = {
-            createdOn = Time.now();
-            principalId = principalId;
-            points = 0;
-            raceId = dto.raceId;
-            username = username;
-            year = dto.year;
-            teamSelections = dto.teamSelections;
-          };
-          
-          let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
-          predictionBuffer.add(newPrediction);
-          predictions := Buffer.toArray<Types.Prediction>(predictionBuffer);
-        }
-      };
 
-      return #ok();
+    public func submitPrediction(principalId: Ids.PrincipalId, username: Text, dto: UserCommands.SubmitPrediction) : Result.Result<(), Enums.Error> {
+        if (dto.teamSelections.size() != 10) {
+            return #err(#InvalidData);
+        };
+
+        let teamIds = Array.map(dto.teamSelections, func (sel: Types.TeamSelection) : Types.F1TeamId { sel.f1TeamId });
+        let uniqueTeamIds = Array.sort(teamIds, Nat16.compare);
+        let hasDuplicates = Array.size(uniqueTeamIds) != Array.size(teamIds);
+        if (hasDuplicates) {
+            return #err(#InvalidData);
+        };
+
+        let existingPrediction = Array.find(predictions, func(entry: Types.Prediction) : Bool {
+            entry.principalId == principalId and entry.raceId == dto.raceId and entry.year == dto.year
+        });
+        
+        switch(existingPrediction) {
+            case (?_) {
+                predictions := Array.map<Types.Prediction, Types.Prediction>(predictions, func(entry: Types.Prediction) {
+                    if (entry.principalId == principalId and entry.raceId == dto.raceId and entry.year == dto.year) {
+                        return {
+                            createdOn = Time.now();
+                            principalId = principalId;
+                            points = 0;
+                            raceId = dto.raceId;
+                            username = username;
+                            year = dto.year;
+                            teamSelections = dto.teamSelections;
+                        }
+                    };
+                    return entry;
+                });
+            };
+            case (null) {
+                let newPrediction: Types.Prediction = {
+                    createdOn = Time.now();
+                    principalId = principalId;
+                    points = 0;
+                    raceId = dto.raceId;
+                    username = username;
+                    year = dto.year;
+                    teamSelections = dto.teamSelections;
+                };
+                
+                let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
+                predictionBuffer.add(newPrediction);
+                predictions := Buffer.toArray(predictionBuffer);
+            }
+        };
+
+        return #ok();
     };
 
     public func calculateF1PredictionPoints(leaderboard: Types.RaceLeaderboard) {
-    
-      let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
-    
-      for (i in Iter.range(0, predictions.size() - 1)) {
-        let prediction = predictions[i];
-
+        let predictionBuffer = Buffer.fromArray<Types.Prediction>(predictions);
         
+        for (i in Iter.range(0, predictions.size() - 1)) {
+            let prediction = predictions[i];
+            
+            var teamDriverOrderScores: Nat16 = 0;
+            var teamBestDriverOrderScores: Nat16 = 0;
+            var driverBonusesPlayedScores: Nat16 = 0;
 
-        for(team in Iter.fromArray(leaderboard.teams)){
-          
+            for (selection in Iter.fromArray(prediction.teamSelections)) {
+                let leadDriverEntry = Array.find(leaderboard.entries, func (entry: Types.RaceLeaderboardEntry) : Bool {
+                    entry.f1DriverId == selection.leadDriver
+                });
+                let secondDriverEntry = Array.find(leaderboard.entries, func (entry: Types.RaceLeaderboardEntry) : Bool {
+                    entry.f1DriverId == selection.secondDriver
+                });
+
+                switch (leadDriverEntry, secondDriverEntry) {
+                    case (?lead, ?second) {
+                        let leadPosition = Array.indexOf(lead, leaderboard.entries, func(a: Types.RaceLeaderboardEntry, b: Types.RaceLeaderboardEntry) : Bool { a == b });
+                        let secondPosition = Array.indexOf(second, leaderboard.entries, func(a: Types.RaceLeaderboardEntry, b: Types.RaceLeaderboardEntry) : Bool { a == b });
+                        
+                        switch (leadPosition, secondPosition) {
+                            case (?lp, ?sp) {
+                                if (lp < sp) { 
+                                    teamDriverOrderScores += 20;
+                                }
+                            };
+                            case _ {  }
+                        };
+                    };
+                    case _ {  }
+                };
+            };
+
+            let actualTeamOrder = Array.map<Types.RaceLeaderboardEntry, (Types.F1TeamId, Nat)>(leaderboard.entries, func (entry: Types.RaceLeaderboardEntry) : (Types.F1TeamId, Nat) {
+                let driver = getDriverById(entry.f1DriverId);
+                let leaderboardEntry = Array.indexOf(entry, leaderboard.entries, func(a: Types.RaceLeaderboardEntry, b: Types.RaceLeaderboardEntry) : Bool { a == b });
+                switch (leaderboardEntry) {
+                    case (?foundEntry) {
+                        (driver.f1TeamId, foundEntry)
+                    };
+                    case (null) {
+                        (driver.f1TeamId, leaderboard.entries.size())
+                    };
+                };
+            });
+            
+            let sortedActualTeamOrder = Array.sort(actualTeamOrder, func(a: (Types.F1TeamId, Nat), b: (Types.F1TeamId, Nat)) : Order.Order {
+                Nat.compare(a.1, b.1)
+            });
+
+            let predictedTeamOrder = Array.map(prediction.teamSelections, func (sel: Types.TeamSelection) : Types.F1TeamId { sel.f1TeamId });
+            var correctTeams = 0;
+            label compare for (i in Iter.range(0, Nat.min(4, Nat.min(Array.size(predictedTeamOrder) - 1, Array.size(sortedActualTeamOrder) - 1)))) {
+                if (predictedTeamOrder[i] == sortedActualTeamOrder[i].0) {
+                    correctTeams += 1;
+                } else {
+                    break compare;
+                };
+            };
+
+            teamBestDriverOrderScores := switch(correctTeams) {
+                case 1 { 10 };
+                case 2 { 25 };
+                case 3 { 50 };
+                case 4 { 100 };
+                case 5 { 200 };
+                case _ { 0 };
+            };
+
+            for (selection in Iter.fromArray(prediction.teamSelections)) {
+               
+                for (bonus in Iter.fromArray(selection.leadDriverBonuses)) {
+                    driverBonusesPlayedScores += switch(bonus) {
+                        case (#OnPole) { if (isOnPole(selection.leadDriver, leaderboard)) 25 else 0 };
+                        case (#FastestLap) { if (hasFastestLap(selection.leadDriver, leaderboard)) 150 else 0 };
+                        case (#WinsRace) { if (isRaceWinner(selection.leadDriver, leaderboard)) 75 else 0 };
+                        case (#FirstOut) { if (isFirstOut(selection.leadDriver, leaderboard)) 200 else 0 };
+                        case (#Lapped) { if (isLapped(selection.leadDriver, leaderboard)) 50 else 0 };
+                        case (#DidNotFinish) { if (didNotFinish(selection.leadDriver, leaderboard)) 100 else 0 };
+                    };
+                };
+
+                for (bonus in Iter.fromArray(selection.secondDriverBonuses)) {
+                    driverBonusesPlayedScores += switch(bonus) {
+                        case (#OnPole) { if (isOnPole(selection.secondDriver, leaderboard)) 25 else 0 };
+                        case (#FastestLap) { if (hasFastestLap(selection.secondDriver, leaderboard)) 150 else 0 };
+                        case (#WinsRace) { if (isRaceWinner(selection.secondDriver, leaderboard)) 75 else 0 };
+                        case (#FirstOut) { if (isFirstOut(selection.secondDriver, leaderboard)) 200 else 0 };
+                        case (#Lapped) { if (isLapped(selection.secondDriver, leaderboard)) 50 else 0 };
+                        case (#DidNotFinish) { if (didNotFinish(selection.secondDriver, leaderboard)) 100 else 0 };
+                    };
+                };
+            };
+
+            let points: Nat16 = teamDriverOrderScores + teamBestDriverOrderScores + driverBonusesPlayedScores;
+
+            let updatedPrediction: Types.Prediction = {
+                createdOn = prediction.createdOn;
+                principalId = prediction.principalId;
+                raceId = prediction.raceId;
+                username = prediction.username;
+                year = prediction.year;
+                points = points;
+                teamSelections = prediction.teamSelections;
+            };
+            
+            predictionBuffer.put(i, updatedPrediction);
         };
-
-        //check the race results
-
-        //for each team compare the lead and second driver predictions
-        //check the team order scores
-        //check the bonuses played to see who got them
-
-        let teamDriverOrderScores: Nat16 = 0;
-        let teamBestDriverOrderScores: Nat16 = 0;
-        let driverBonusesPlayedScores: Nat16 = 0;
-
-        var points: Nat16 = teamDriverOrderScores + teamBestDriverOrderScores + driverBonusesPlayedScores; // TODO
-
         
-
-        
-        let updatedPrediction : Types.Prediction = {
-            createdOn = prediction.createdOn;
-            principalId = prediction.principalId;
-            raceId = prediction.raceId;
-            username = prediction.username;
-            year = prediction.year;
-            points = points;
-            teamSelections = prediction.teamSelections;
-        };
-        
-        predictionBuffer.put(i, updatedPrediction);
-      };
-    
-      predictions := Buffer.toArray(predictionBuffer);
+        predictions := Buffer.toArray(predictionBuffer);
     };
+
+    private func getDriverById(driverId: Types.F1DriverId) : Types.F1Driver {
+        // TODO: Implement actual driver lookup from storage
+        {
+            id = driverId;
+            firstName = "";
+            lastName = "";
+            nationality = 0;
+            f1TeamId = 0;
+        }
+    };
+
+    private func isOnPole(driverId: Types.F1DriverId, leaderboard: Types.RaceLeaderboard) : Bool {
+        // TODO: Implement logic to check if driver was on pole
+        // Requires additional race data (e.g., qualifying results)
+        false
+    };
+
+    private func hasFastestLap(driverId: Types.F1DriverId, leaderboard: Types.RaceLeaderboard) : Bool {
+        // TODO: Implement logic to check if driver had fastest lap
+        // Check RaceLeaderboardEntry.laps for fastest lap time
+        false
+    };
+
+    private func isRaceWinner(driverId: Types.F1DriverId, leaderboard: Types.RaceLeaderboard) : Bool {
+        if (leaderboard.entries.size() == 0) {
+            return false;
+        };
+        let firstEntry = leaderboard.entries[0];
+        firstEntry.f1DriverId == driverId
+    };
+
+    private func isFirstOut(driverId: Types.F1DriverId, leaderboard: Types.RaceLeaderboard) : Bool {
+        // TODO: Implement logic to check if driver was first to retire
+        // Check RaceLeaderboardEntry for first DNF or retirement data
+        false
+    };
+
+    private func isLapped(driverId: Types.F1DriverId, leaderboard: Types.RaceLeaderboard) : Bool {
+        // TODO: Implement logic to check if driver was lapped
+        // Check RaceLeaderboardEntry.laps or raceTime
+        false
+    };
+
+    private func didNotFinish(driverId: Types.F1DriverId, leaderboard: Types.RaceLeaderboard) : Bool {
+        // TODO: Implement logic to check if driver did not finish
+        // Check if driver is missing from leaderboard.entries or marked as DNF
+        false
+    };
+
+
+
 
     public func getTotalLeaderboardEntries(raceId: Types.RaceId) : Nat {
       let leaderboardEntries = Array.filter<Types.Prediction>(predictions, func(entry: Types.Prediction){

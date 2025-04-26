@@ -155,10 +155,13 @@ actor Self {
   public shared ({ caller }) func submitPrediction(dto : UserCommands.SubmitPrediction) : async Result.Result<(), Enums.Error> {
     assert not Principal.isAnonymous(caller);
     let principalId = Principal.toText(caller);
-
-    //TODO
-
-    return #err(#NotFound);
+    let user = userManager.getProfile(principalId);
+    switch(user){
+      case (#ok foundUser){
+        return userManager.submitPrediction(principalId, foundUser.username, dto);
+      };
+      case (_){ return #err(#NotFound) }
+    }
   };
 
   /* ----- F1 Team Queries and Commands ----- */
