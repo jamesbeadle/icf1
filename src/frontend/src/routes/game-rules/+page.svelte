@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
-    import Layout from "../Layout.svelte";
+    import Layout from "../+layout.svelte";
 </script>
 
 <Layout>

@@ -2,7 +2,7 @@
     import Buzz from "$lib/components/buzz/buzz.svelte";
     import Modal from "$lib/components/shared/modal.svelte";
     import Upcoming from "$lib/components/upcoming/upcoming.svelte";
-    import Layout from "./Layout.svelte";
+    import Layout from "./+layout.svelte";
 
     let showEventsModal = false;
 

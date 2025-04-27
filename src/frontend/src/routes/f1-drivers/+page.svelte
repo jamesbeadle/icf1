@@ -6,7 +6,7 @@
     import { toasts } from "$lib/stores/toasts-store";
     import type { F1Teams, GetF1Teams } from "../../../../declarations/backend/backend.did";
     
-    import Layout from "../Layout.svelte";
+    import Layout from "../+layout.svelte";
     import BrandPanel from "$lib/components/shared/brand-panel.svelte";
     import PaginationRow from "$lib/components/shared/pagination-row.svelte";
     import LocalSpinner from "$lib/components/shared/local-spinner.svelte";

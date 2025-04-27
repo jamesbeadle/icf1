@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Layout from "../Layout.svelte";
+    import Layout from "../+layout.svelte";
     import LocalSpinner from "$lib/components/shared/local-spinner.svelte";
     import { writable } from "svelte/store";
     import ProfileSocial from "$lib/components/profile/profile-social.svelte";

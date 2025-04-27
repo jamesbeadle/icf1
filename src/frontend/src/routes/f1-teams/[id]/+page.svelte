@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Layout from "../../Layout.svelte";
+    import Layout from "../../+layout.svelte";
     import type { F1Team } from "../../../../../declarations/backend/backend.did";
     import { onMount } from "svelte";
     import { f1TeamStore } from "$lib/stores/f1-team-store";

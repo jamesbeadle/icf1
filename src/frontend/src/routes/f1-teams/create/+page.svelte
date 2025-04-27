@@ -3,7 +3,7 @@
     import ConfirmModal from "$lib/components/shared/confirm-modal.svelte";
     import { f1TeamStore } from "$lib/stores/f1-team-store";
     import type { CreateF1Team } from "../../../../../declarations/backend/backend.did";
-    import Layout from "../../Layout.svelte";
+    import Layout from "../../+layout.svelte";
 
     let teamName = "";
     let founded = 0n;

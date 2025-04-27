@@ -5,7 +5,7 @@
     import { f1TeamStore } from "$lib/stores/f1-team-store";
     import type { CreateF1Team, F1Team, UpdateF1Team } from "../../../../../../declarations/backend/backend.did";
     import { page } from "$app/state";
-    import Layout from "../../../Layout.svelte";
+    import Layout from "../../../+layout.svelte";
     
     let f1TeamId: bigint = BigInt(page.params.id);
     let f1Team: F1Team | null = null;

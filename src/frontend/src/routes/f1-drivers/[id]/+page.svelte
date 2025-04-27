@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import Layout from "../../Layout.svelte";
+    import Layout from "../../+layout.svelte";
     import { page } from "$app/state";
     import { f1DriverStore } from "$lib/stores/f1-driver-store";
     import type { GetF1Driver, F1Driver } from "../../../../../declarations/backend/backend.did";
