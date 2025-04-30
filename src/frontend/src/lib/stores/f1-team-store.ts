@@ -1,19 +1,22 @@
-import { F1TeamService } from "$lib/services/f1-team-service";
+import { F1TeamsService } from "$lib/services/f1-team-service";
 import type {
   CreateF1Team,
   GetF1Team,
-  GetF1Teams,
+  ListF1Teams,
   F1Team,
   F1Teams,
   UpdateF1Team,
 } from "../../../../declarations/backend/backend.did";
+import { writable } from "svelte/store";
 
 function createF1TeamStore() {
-  async function getF1Teams(dto: GetF1Teams): Promise<F1Teams> {
+  const { subscribe, set, update } = writable<F1Team[]>([]);
+
+  async function getF1Teams(dto: ListF1Teams): Promise<F1Teams> {
     return await new F1TeamsService().getF1Teams(dto);
   }
 
-  async function getF1Team(dto: GetGF1Teame): Promise<F1Teame> {
+  async function getF1Team(dto: GetF1Team): Promise<F1Team> {
     return await new F1TeamsService().getF1Team(dto);
   }
 
@@ -26,6 +29,9 @@ function createF1TeamStore() {
   }
 
   return {
+    subscribe,
+    set,
+    update,
     getF1Team,
     getF1Teams,
     addF1Team,
