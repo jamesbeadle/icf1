@@ -12,7 +12,7 @@
     
     onMount(async () => {
         try {
-            await userStore.sync();
+            /* await userStore.sync();
             userStore.subscribe((user) => {
                 if(!user){ return }
                 let profilePictureResult = user.profilePicture;
@@ -20,7 +20,7 @@
                     profilePicture = getImageURL(profilePictureResult[0]);
                 }
                 isLoading = false;
-            });
+            }); */
         } catch (err) {
             console.error('Creating loading profile picture:', err);
         }
@@ -33,7 +33,7 @@
 {:else}
 
     <div class="relative flex items-center justify-center w-full aspect-[16/9] lg:aspect-square bg-yellow-400 rounded-lg">
-        {#if profilePicture}
+        <!-- {#if profilePicture}
             <div class="relative w-full h-full">
                 <img src={profilePicture} alt="Profile" class="object-cover w-full h-full rounded-lg"/>
                 <button 
@@ -51,12 +51,14 @@
             >
                 <EditIcon className="w-20 h-20" fill="white"/>
             </button>
-        {/if}
+        {/if} -->
+        <p class="text-2xl text-black condensed">Coming Soon</p>
     </div>
+{/if}
 
-    {#if showUpdateProfilePicture}
-        <UpdateProfilePictureModal
-            showModal={showUpdateProfilePicture} 
-            on:close={() => showUpdateProfilePicture = false} />
-    {/if}
+{#if showUpdateProfilePicture}
+    <UpdateProfilePictureModal
+        showModal={showUpdateProfilePicture} 
+        on:close={() => showUpdateProfilePicture = false} 
+    />
 {/if}

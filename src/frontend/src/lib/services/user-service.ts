@@ -1,20 +1,21 @@
 import { ActorFactory } from "$lib/utils/actor.factory";
 import { authStore } from "$lib/stores/auth-store";
+import { get } from "svelte/store";
 import type {
-  CreateUser,
+  CreateProfile,
   GetProfile,
-  IsUsernameAvailable,
   Profile,
   UpdateProfilePicture,
   UpdateUsername,
-  UsernameAvailable,
+  IsUsernameValid,
 } from "../../../../declarations/backend/backend.did";
 import { isError } from "$lib/utils/helpers";
 
 export class UserService {
+  //User Query Functions:
 
   async getProfile(dto: GetProfile): Promise<Profile> {
-    const identityActor = await ActorFactory.createIdentityActor(
+    const identityActor: any = await ActorFactory.createIdentityActor(
       authStore,
       process.env.BACKEND_CANISTER_ID ?? "",
     );
@@ -24,41 +25,29 @@ export class UserService {
     return result.ok;
   }
 
-  async getBuzz(dto: GetBuzz): Promise<Buzz> {
-    const identityActor = await ActorFactory.createIdentityActor(
-      authStore,
-      process.env.BACKEND_CANISTER_ID ?? "",
-    );
-
-    const result: any = await identityActor.getBuzzEntries(dto);
-    if (isError(result)) throw new Error("Failed to get buzz entries");
-    return result.ok;
-  }
-
-  async getUpcomingGames(dto: GetUpcomingGames): Promise<UpcomingGames> {
-    const identityActor = await ActorFactory.createIdentityActor(
-      authStore,
-      process.env.BACKEND_CANISTER_ID ?? "",
-    );
-
-    const result: any = await identityActor.getUpcomingGames(dto);
-    if (isError(result)) throw new Error("Failed to get upcoming games");
-    return result.ok;
-  }
-
-  async isUsernameAvailable(
-    dto: IsUsernameAvailable,
-  ): Promise<UsernameAvailable> {
-    return false; //TODO
-  }
-
-  async createUser(dto: CreateUser): Promise<any> {
+  async isUsernameValid(dto: IsUsernameValid): Promise<boolean> {
     try {
-      const identityActor = await ActorFactory.createIdentityActor(
+      const identityActor: any = await ActorFactory.createIdentityActor(
         authStore,
         process.env.BACKEND_CANISTER_ID ?? "",
       );
-      const result = await identityActor.createUser(dto);
+      const result = await identityActor.isUsernameValid(dto);
+      return result.ok;
+    } catch (error) {
+      console.error("Error checking if username is valid:", error);
+      return false;
+    }
+  }
+
+  //Golfer Profile Commands:
+
+  async createProfile(dto: CreateProfile): Promise<any> {
+    try {
+      const identityActor: any = await ActorFactory.createIdentityActor(
+        authStore,
+        process.env.BACKEND_CANISTER_ID ?? "",
+      );
+      const result = await identityActor.createProfile(dto);
       return result;
     } catch (error) {
       console.error("Error creating user:", error);
@@ -68,7 +57,7 @@ export class UserService {
 
   async updateUsername(dto: UpdateUsername): Promise<any> {
     try {
-      const identityActor = await ActorFactory.createIdentityActor(
+      const identityActor: any = await ActorFactory.createIdentityActor(
         authStore,
         process.env.BACKEND_CANISTER_ID ?? "",
       );
@@ -82,7 +71,7 @@ export class UserService {
 
   async updateProfilePicture(dto: UpdateProfilePicture): Promise<any> {
     try {
-      const identityActor = await ActorFactory.createIdentityActor(
+      const identityActor: any = await ActorFactory.createIdentityActor(
         authStore,
         process.env.BACKEND_CANISTER_ID ?? "",
       );
@@ -92,5 +81,26 @@ export class UserService {
       console.error("Error updating profile picture:", error);
       throw error;
     }
+  }
+
+  async isAdmin(): Promise<boolean> {
+    const identityActor: any = await ActorFactory.createIdentityActor(
+      authStore,
+      process.env.BACKEND_CANISTER_ID ?? "",
+    );
+    const identity = get(authStore).identity;
+    if (identity) {
+      try {
+        const principalId = identity.getPrincipal().toString();
+        const result = await identityActor.isAdmin(principalId);
+        if (isError(result))
+          throw new Error("Failed to check if user is admin");
+        return result.ok;
+      } catch (error) {
+        console.error("Error checking if user is admin:", error);
+        return false;
+      }
+    }
+    return false;
   }
 }

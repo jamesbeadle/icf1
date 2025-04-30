@@ -1,5 +1,4 @@
 <script lang="ts">
-
     import { onMount } from 'svelte';
     import { userStore } from "$lib/stores/user-store";
     import type { Profile } from "../../../../../declarations/backend/backend.did";
@@ -8,6 +7,7 @@
     import EditIcon from "$lib/icons/edit-icon.svelte";
     import BrandPanel from '../shared/brand-panel.svelte';
     import LocalSpinner from '../shared/local-spinner.svelte';
+    import CopyPrincipal from './copy-principal.svelte';
     import { toasts } from '$lib/stores/toasts-store';
 
     let isLoading = true;
@@ -20,10 +20,12 @@
             userStore.subscribe((user) => {
                 if(!user){ return }
                 profile = user;
-                isLoading = false;
             });
+            console.log(profile);
         } catch (err) {
-            console.error('Creating loading profile detail:', err);
+            console.error('Creating loading user detail:', err);
+        } finally {
+            isLoading = false;
         }
     });
 </script>
@@ -32,17 +34,20 @@
     <LocalSpinner />
 {:else}
     <BrandPanel title="DETAILS" subTitle="TELL US ABOUT YOURSELF">
-        <div class="relative w-full p-4">
-            <div class="text-BrandGray text-sm">USERNAME</div>
+        <div class="relative w-full p-4 text-black">
+            <div class="text-sm text-BrandGray">USERNAME</div>
             <div class="text-4xl condensed">{profile.username}</div>
             <button on:click={() => showUpdateUsernameModal = true } class="absolute top-4 right-4">
                 <EditIcon className="w-4" />
             </button>
+            <div class="text-sm text-BrandGray">JOINED ON</div>
+            <div class="text-4xl condensed">{profile.joinedOn}</div>
+            <div class="text-sm text-BrandGray">PRINCIPAL ID</div>
         </div>
+        <CopyPrincipal />
     </BrandPanel>
+{/if}
 
-    {#if showUpdateUsernameModal}
-        <UpdateUsernameModal />
-    {/if}
-
+{#if showUpdateUsernameModal}
+    <UpdateUsernameModal />
 {/if}

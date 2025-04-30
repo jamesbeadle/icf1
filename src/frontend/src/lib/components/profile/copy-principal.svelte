@@ -1,5 +1,5 @@
 <script lang="ts">
-    import CopyIcon from "$lib/icons/CopyIcon.svelte";
+    import CopyIcon from "$lib/icons/copy-icon.svelte";
     import { authStore } from "$lib/stores/auth-store";
     import { toasts } from "$lib/stores/toasts-store";
 
@@ -17,14 +17,14 @@
         }
 </script>
 
-<div class="relative bg-BrandGrayShade2 rounded-lg p-4">
+<div class="relative p-4 rounded-lg bg-BrandGrayShade2">
     <button 
         on:click={() => { copyTextAndShowToast($authStore.identity?.getPrincipal().toString() ?? "") }}
-        class="absolute top-2 right-2 text-white"
+        class="absolute text-white top-2 right-2"
     >
         <CopyIcon className="w-5 h-5" fill='#FFFFFF' />
     </button>
-    <p class="text-white font-mono text-sm break-all px-4">
+    <p class="px-4 font-mono text-sm text-white break-all">
         {$authStore.identity?.getPrincipal().toString() ?? "Not available"}
     </p>
 </div>

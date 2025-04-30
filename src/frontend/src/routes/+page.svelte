@@ -1,43 +1,32 @@
 <script lang="ts">
-    import Buzz from "$lib/components/buzz/buzz.svelte";
-    import Modal from "$lib/components/shared/modal.svelte";
-    import Upcoming from "$lib/components/upcoming/upcoming.svelte";
-    import Layout from "./+layout.svelte";
-
-    let showEventsModal = false;
-
-    function closeEventsModal() {
-        showEventsModal = false;
+    import { onMount } from "svelte";
+ 
+    import FullScreenSpinner from "$lib/components/shared/full-screen-spinner.svelte";
+    import Leaderboard from "$lib/components/leaderboard/leaderboard.svelte";
+ 
+    let isLoading = $state(true);
+    let loadingMessage = $state("Loading Homepage");
+ 
+    onMount(async () => {
+       await loadData();
+    });
+ 
+    async function loadData() {
+       isLoading = true;
+       try {
+       } catch (error) {
+          console.error(error);
+       } finally {
+          isLoading = false;
+       }
     }
-
-    function openEventsModal() {
-        showEventsModal = true;
-    }
-</script>
-
-<Layout>
-    <div class="flex flex-row gap-6 p-4 text-black md:p-6">
-        <div class="w-full md:w-2/3">
-            <Buzz />
-            
-            <div class="mt-4 md:hidden">
-                <button 
-                    on:click={openEventsModal}
-                    class="w-full px-4 py-2 transition-colors rounded-md text-BrandYellow bg-BrandForest hover:bg-BrandForest/80"
-                >
-                    View Events
-                </button>
-            </div>
-        </div>
-
-        <div class="hidden md:block md:w-1/3">
-            <Upcoming />
-        </div>
+ 
+ </script>
+ 
+ {#if isLoading}
+    <FullScreenSpinner message={loadingMessage} />
+ {:else}
+    <div>
+       <Leaderboard />
     </div>
-
-    {#if showEventsModal}
-        <Modal showModal={showEventsModal} onClose={closeEventsModal}>
-            <Upcoming />
-        </Modal>
-    {/if}
-</Layout>
+ {/if} 

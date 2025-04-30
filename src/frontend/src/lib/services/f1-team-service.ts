@@ -2,7 +2,7 @@ import { isError } from "$lib/utils/helpers";
 import type {
   CreateF1Team,
   GetF1Team,
-  GetF1Teams,
+  ListF1Teams,
   F1Team,
   F1Teams,
   UpdateF1Team,
@@ -33,12 +33,12 @@ export class F1TeamsService {
 
   //Queries
 
-  async getF1Teams(dto: GetF1Teams): Promise<F1Teams> {
+  async getF1Teams(dto: ListF1Teams): Promise<F1Teams> {
     const identityActor: any = await ActorFactory.createIdentityActor(
       authStore,
       process.env.BACKEND_CANISTER_ID ?? "",
     );
-    const result = await identityActor.getF1Teams(dto);
+    const result = await identityActor.listF1Teams(dto);
     if (isError(result)) throw new Error("Failed to get F1 teams");
     return result.ok;
   }

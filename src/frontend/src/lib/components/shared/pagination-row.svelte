@@ -8,7 +8,7 @@
 
 
 {#if total > 0}
-<div class="flex justify-between items-center mt-4">
+<div class="flex items-center justify-between mt-4">
     <div class="text-sm text-BrandDarkGray">
         Showing {(page - 1n) * pageSize + 1n} to
         {Math.min(Number(page * pageSize), Number(total))} of {total} {typeName}

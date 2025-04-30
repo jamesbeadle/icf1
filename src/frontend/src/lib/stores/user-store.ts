@@ -3,13 +3,14 @@ import { getFileExtensionFromFile, isError } from "$lib/utils/helpers";
 import { writable } from "svelte/store";
 import { ActorFactory } from "$lib/utils/actor.factory";
 import { UserService } from "$lib/services/user-service";
+import { userIdCreatedStore } from "$lib/stores/user-control-store";
 import type {
   GetProfile,
-  IsUsernameAvailable,
   Profile,
   UpdateProfilePicture,
   UpdateUsername,
-  UsernameAvailable,
+  CreateProfile,
+  IsUsernameValid,
 } from "../../../../declarations/backend/backend.did";
 
 function createUserStore() {
@@ -38,40 +39,26 @@ function createUserStore() {
       process.env.BACKEND_CANISTER_ID ?? "",
     );
 
-    authStore.subscribe(async (user) => {
-      let principalId = user.identity?.getPrincipal().toString();
-      if (!principalId) {
-        return;
-      }
-
-      let dto: GetProfile = {
-        principalId,
-      };
-
-      let getProfileResponse = await identityActor.getProfile(dto);
-      let error = isError(getProfileResponse);
-      if (error) {
-        console.error("Error fetching user profile");
-        return;
-      }
-      let profileData = getProfileResponse.ok;
-      set(profileData);
-    });
+    let getProfileResponse = await identityActor.getProfile({});
+    let error = isError(getProfileResponse);
+    if (error) {
+      console.error("Error fetching user profile");
+      throw new Error("Failed to fetch user profile");
+      return;
+    }
+    let profileData = getProfileResponse.ok;
+    set(profileData);
+    userIdCreatedStore.set({ data: profileData.principalId, certified: true });
   }
 
   //User Query Functions
 
-  async function getProfile(principalId: string): Promise<Profile | null> {
+  async function getProfile(): Promise<Profile | null> {
     const identityActor: any = await ActorFactory.createIdentityActor(
       authStore,
       process.env.BACKEND_CANISTER_ID ?? "",
     );
-
-    let dto: GetProfile = {
-      principalId,
-    };
-
-    let getProfileResponse = await identityActor.getProfile(dto);
+    let getProfileResponse = await identityActor.getProfile({});
     let error = isError(getProfileResponse);
     if (error) {
       console.error("Error fetching user profile");
@@ -80,16 +67,20 @@ function createUserStore() {
     return getProfileResponse.ok;
   }
 
-  async function isUsernameAvailable(
-    dto: IsUsernameAvailable,
-  ): Promise<UsernameAvailable> {
-    return new UserService().isUsernameAvailable(dto);
+  /*   async function getUpcomingGames(
+    dto: GetUpcomingGames,
+  ): Promise<UpcomingGames> {
+    return new UserService().getUpcomingGames(dto);
+  } */
+
+  async function isUsernameValid(dto: IsUsernameValid): Promise<boolean> {
+    return new UserService().isUsernameValid(dto);
   }
 
   //User Commands Functions
 
-  async function createUser(dto: CreateUser): Promise<any> {
-    return new UserService().createUser(dto);
+  async function createUser(dto: CreateProfile): Promise<any> {
+    return new UserService().createProfile(dto);
   }
 
   async function updateUsername(dto: UpdateUsername): Promise<any> {
@@ -119,9 +110,7 @@ function createUserStore() {
           );
 
           let dto: UpdateProfilePicture = {
-            principalId: principalId,
             profilePicture: [uint8Array],
-            profilePictureExtension: extension,
           };
           const result = await identityActor.updateUserPicture(dto);
           if (isError(result)) {
@@ -141,15 +130,20 @@ function createUserStore() {
     }
   }
 
+  async function isAdmin(): Promise<boolean> {
+    return new UserService().isAdmin();
+  }
+
   return {
     subscribe,
     sync,
     cacheProfile,
     getProfile,
-    isUsernameAvailable,
     createUser,
     updateUsername,
     updateProfilePicture,
+    isAdmin,
+    isUsernameValid,
   };
 }
 
